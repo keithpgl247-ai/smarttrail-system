@@ -1,28 +1,24 @@
 // DOM Ready Function
 document.addEventListener('DOMContentLoaded', function() {
-    // Mobile Menu Toggle
-    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    // ===== MOBILE MENU TOGGLE - FIXED =====
+    const mobileMenuBtns = document.querySelectorAll('.mobile-menu-btn');
     const navMenu = document.querySelector('.nav-menu');
     const mobileOverlay = document.querySelector('.mobile-overlay');
-    const mobileHeaderBtn = document.querySelector('.mobile-header .mobile-menu-btn');
     
-    // Mobile header menu button
-    if (mobileHeaderBtn) {
-        mobileHeaderBtn.addEventListener('click', function() {
+    // Handle all mobile menu buttons
+    mobileMenuBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            // Toggle menu
             navMenu.classList.toggle('active');
             mobileOverlay.classList.toggle('active');
             document.body.classList.toggle('no-scroll');
+            
+            // Toggle hamburger animation
+            this.classList.toggle('active');
         });
-    }
-    
-    // Desktop menu button
-    if (mobileMenuBtn) {
-        mobileMenuBtn.addEventListener('click', function() {
-            navMenu.classList.toggle('active');
-            mobileOverlay.classList.toggle('active');
-            document.body.classList.toggle('no-scroll');
-        });
-    }
+    });
     
     // Close menu when clicking overlay
     if (mobileOverlay) {
@@ -30,6 +26,11 @@ document.addEventListener('DOMContentLoaded', function() {
             navMenu.classList.remove('active');
             mobileOverlay.classList.remove('active');
             document.body.classList.remove('no-scroll');
+            
+            // Reset hamburger buttons
+            mobileMenuBtns.forEach(btn => {
+                btn.classList.remove('active');
+            });
         });
     }
     
@@ -40,11 +41,73 @@ document.addEventListener('DOMContentLoaded', function() {
                 navMenu.classList.remove('active');
                 mobileOverlay.classList.remove('active');
                 document.body.classList.remove('no-scroll');
+                
+                // Reset hamburger buttons
+                mobileMenuBtns.forEach(btn => {
+                    btn.classList.remove('active');
+                });
             }
         });
     });
     
-    // Hero Slider
+    // ===== MOBILE CONTACT BUTTON TOGGLE - FIXED =====
+    const mobileContactBtn = document.querySelector('.mobile-contact-btn');
+    const supportPanel = document.querySelector('.support-panel');
+    
+    if (mobileContactBtn && supportPanel) {
+        mobileContactBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Toggle contact panel
+            const isPanelVisible = supportPanel.classList.contains('active');
+            
+            if (isPanelVisible) {
+                // Close the panel
+                supportPanel.classList.remove('active');
+                this.classList.remove('active');
+            } else {
+                // Open the panel
+                supportPanel.classList.add('active');
+                this.classList.add('active');
+                
+                // Close mobile menu if open
+                if (navMenu.classList.contains('active')) {
+                    navMenu.classList.remove('active');
+                    mobileOverlay.classList.remove('active');
+                    document.body.classList.remove('no-scroll');
+                    mobileMenuBtns.forEach(btn => btn.classList.remove('active'));
+                }
+            }
+        });
+    }
+    
+    // Close support panel when clicking outside on mobile
+    document.addEventListener('click', function(e) {
+        if (window.innerWidth <= 768 && 
+            supportPanel && 
+            supportPanel.classList.contains('active') &&
+            !e.target.closest('.support-system') && 
+            !e.target.closest('.mobile-contact-btn')) {
+            
+            supportPanel.classList.remove('active');
+            if (mobileContactBtn) {
+                mobileContactBtn.classList.remove('active');
+            }
+        }
+    });
+    
+    // Close support panel on window resize if on desktop
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768 && supportPanel) {
+            supportPanel.classList.remove('active');
+            if (mobileContactBtn) {
+                mobileContactBtn.classList.remove('active');
+            }
+        }
+    });
+    
+    // ===== HERO SLIDER =====
     const heroSlides = document.querySelectorAll('.slide');
     const slideIndicators = document.querySelector('.slide-indicators');
     let currentSlide = 0;
@@ -122,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
         startAutoSlide();
     }
     
-    // Testimonial Slider
+    // ===== TESTIMONIAL SLIDER =====
     const testimonials = document.querySelectorAll('.testimonial');
     const testimonialIndicators = document.querySelector('.testimonial-indicators');
     let currentTestimonial = 0;
@@ -188,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
         startTestimonialAutoSlide();
     }
     
-    // Products Tabs
+    // ===== PRODUCTS TABS =====
     const productTabs = document.querySelectorAll('.product-tab');
     const productSections = document.querySelectorAll('.product-section');
     
@@ -222,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Contact Form Tabs
+    // ===== CONTACT FORM TABS =====
     const formTabs = document.querySelectorAll('.form-tab');
     const contactForms = document.querySelectorAll('.contact-form');
     
@@ -246,7 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // FAQ Accordion
+    // ===== FAQ ACCORDION =====
     const faqQuestions = document.querySelectorAll('.faq-question');
     
     if (faqQuestions.length > 0) {
@@ -268,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Form Submission
+    // ===== FORM SUBMISSION =====
     const contactFormsAll = document.querySelectorAll('form');
     
     contactFormsAll.forEach(form => {
@@ -318,7 +381,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Smooth scrolling for anchor links
+    // ===== SMOOTH SCROLLING =====
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
             const href = this.getAttribute('href');
@@ -333,6 +396,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         navMenu.classList.remove('active');
                         mobileOverlay.classList.remove('active');
                         document.body.classList.remove('no-scroll');
+                        mobileMenuBtns.forEach(btn => btn.classList.remove('active'));
+                    }
+                    
+                    // Close support panel on mobile
+                    if (window.innerWidth <= 768 && supportPanel) {
+                        supportPanel.classList.remove('active');
+                        if (mobileContactBtn) {
+                            mobileContactBtn.classList.remove('active');
+                        }
                     }
                     
                     // Scroll to target
@@ -345,7 +417,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Add scroll effect to navbar
+    // ===== NAVBAR SCROLL EFFECT =====
     window.addEventListener('scroll', function() {
         const navbar = document.querySelector('.navbar');
         if (window.scrollY > 100) {
@@ -359,11 +431,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Support system hover
+    // ===== SUPPORT SYSTEM DESKTOP HOVER =====
     const supportSystem = document.querySelector('.support-system');
-    const supportPanel = document.querySelector('.support-panel');
     
-    if (supportSystem && supportPanel) {
+    if (supportSystem && supportPanel && window.innerWidth > 768) {
         // Show on hover
         supportSystem.addEventListener('mouseenter', function() {
             supportPanel.style.opacity = '1';
@@ -379,15 +450,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Mobile contact button
-    const mobileContactBtn = document.querySelector('.mobile-contact-btn');
-    if (mobileContactBtn) {
-        mobileContactBtn.addEventListener('click', function() {
-            window.location.href = 'contact.html';
-        });
-    }
-    
-    // WhatsApp functionality
+    // ===== WHATSAPP FUNCTIONALITY =====
     const whatsappButtons = document.querySelectorAll('.btn-whatsapp, a[href*="wa.me"], a[href*="whatsapp"]');
     whatsappButtons.forEach(button => {
         button.addEventListener('click', function(e) {
@@ -402,7 +465,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Add current year to footer
+    // ===== ADD CURRENT YEAR TO FOOTER =====
     const yearSpan = document.querySelector('#current-year');
     if (yearSpan) {
         yearSpan.textContent = new Date().getFullYear();
