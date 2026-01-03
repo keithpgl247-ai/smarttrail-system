@@ -1,5 +1,31 @@
 // DOM Ready Function
 document.addEventListener('DOMContentLoaded', function() {
+    // ===== UPDATE COPYRIGHT YEAR =====
+    function updateCopyrightYear() {
+        const currentYear = new Date().getFullYear();
+        
+        // Find all footer copyright elements
+        const copyrightElements = document.querySelectorAll('.footer-bottom p');
+        
+        copyrightElements.forEach(element => {
+            const currentText = element.textContent;
+            // Replace any 4-digit year with current year
+            const updatedText = currentText.replace(/\b20\d{2}\b/, currentYear);
+            element.textContent = updatedText;
+        });
+        
+        // Also update any other copyright elements you might have
+        const allCopyrightElements = document.querySelectorAll('[class*="copyright"], [class*="Copyright"]');
+        allCopyrightElements.forEach(element => {
+            const currentText = element.textContent;
+            const updatedText = currentText.replace(/\b20\d{2}\b/, currentYear);
+            element.textContent = updatedText;
+        });
+    }
+    
+    // Run copyright year update
+    updateCopyrightYear();
+    
     // ===== MOBILE MENU TOGGLE - FIXED =====
     const mobileMenuBtns = document.querySelectorAll('.mobile-menu-btn');
     const navMenu = document.querySelector('.nav-menu');
@@ -185,14 +211,14 @@ document.addEventListener('DOMContentLoaded', function() {
         startAutoSlide();
     }
     
-    // ===== TESTIMONIAL SLIDER =====
+    // ===== TESTIMONIAL SLIDER - UPDATED FOR 4 TESTIMONIALS =====
     const testimonials = document.querySelectorAll('.testimonial');
     const testimonialIndicators = document.querySelector('.testimonial-indicators');
     let currentTestimonial = 0;
     let testimonialInterval;
     
     if (testimonials.length > 0) {
-        // Create indicators
+        // Create indicators for all testimonials (including new e-commerce one)
         testimonials.forEach((testimonial, index) => {
             const indicator = document.createElement('div');
             indicator.classList.add('testimonial-indicator');
@@ -251,7 +277,7 @@ document.addEventListener('DOMContentLoaded', function() {
         startTestimonialAutoSlide();
     }
     
-    // ===== PRODUCTS TABS =====
+    // ===== PRODUCTS TABS - UPDATED FOR 5 TABS (INCLUDING E-COMMERCE) =====
     const productTabs = document.querySelectorAll('.product-tab');
     const productSections = document.querySelectorAll('.product-section');
     
@@ -283,6 +309,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
+        
+        // Handle URL hash on page load for direct linking to specific product
+        if (window.location.hash) {
+            const hash = window.location.hash.substring(1);
+            const targetTab = document.querySelector(`.product-tab[href="#${hash}"]`);
+            const targetSection = document.getElementById(hash);
+            
+            if (targetTab && targetSection) {
+                // Remove active class from all tabs and sections
+                productTabs.forEach(t => t.classList.remove('active'));
+                productSections.forEach(s => s.classList.remove('active-product'));
+                
+                // Add active class to target tab and section
+                targetTab.classList.add('active');
+                targetSection.classList.add('active-product');
+                
+                // Scroll to section on page load
+                setTimeout(() => {
+                    targetSection.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }, 100);
+            }
+        }
     }
     
     // ===== CONTACT FORM TABS =====
@@ -331,7 +382,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // ===== FORM SUBMISSION =====
+    // ===== FORM SUBMISSION - WITH E-COMMERCE SUPPORT =====
     const contactFormsAll = document.querySelectorAll('form');
     
     contactFormsAll.forEach(form => {
@@ -341,6 +392,18 @@ document.addEventListener('DOMContentLoaded', function() {
             // Get form data
             const formData = new FormData(this);
             const formValues = Object.fromEntries(formData.entries());
+            
+            // Determine which form was submitted
+            const formName = this.getAttribute('id') || 'contact-form';
+            const isEcommerceForm = formName.includes('ecommerce') || 
+                                   form.querySelector('[name*="ecommerce"]') || 
+                                   form.querySelector('[name*="Ecovera"]');
+            
+            // Custom success message based on form type
+            let successMessage = 'Sent Successfully!';
+            if (isEcommerceForm) {
+                successMessage = 'E-commerce inquiry sent! We\'ll contact you soon.';
+            }
             
             // Simple validation
             let isValid = true;
@@ -357,16 +420,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Show success message
                 const submitBtn = this.querySelector('button[type="submit"]');
                 const originalText = submitBtn.innerHTML;
+                const originalBgColor = submitBtn.style.backgroundColor;
                 
-                submitBtn.innerHTML = '<i class="fas fa-check"></i> Sent Successfully!';
+                submitBtn.innerHTML = `<i class="fas fa-check"></i> ${successMessage}`;
                 submitBtn.style.backgroundColor = '#4caf50';
                 submitBtn.disabled = true;
+                
+                // Add e-commerce specific tracking
+                if (isEcommerceForm) {
+                    console.log('E-commerce inquiry submitted:', formValues);
+                    // You can add e-commerce specific analytics here
+                    if (typeof gtag !== 'undefined') {
+                        gtag('event', 'ecommerce_inquiry', {
+                            'event_category': 'form_submission',
+                            'event_label': 'ecommerce'
+                        });
+                    }
+                } else {
+                    console.log('Form submitted:', formValues);
+                }
                 
                 // Reset form after 3 seconds
                 setTimeout(() => {
                     this.reset();
                     submitBtn.innerHTML = originalText;
-                    submitBtn.style.backgroundColor = '';
+                    submitBtn.style.backgroundColor = originalBgColor;
                     submitBtn.disabled = false;
                     
                     // Reset border colors
@@ -374,14 +452,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         input.style.borderColor = '';
                     });
                 }, 3000);
-                
-                // In a real application, you would send the form data to a server here
-                console.log('Form submitted:', formValues);
             }
         });
     });
     
-    // ===== SMOOTH SCROLLING =====
+    // ===== SMOOTH SCROLLING - INCLUDING E-COMMERCE SECTION =====
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
             const href = this.getAttribute('href');
@@ -405,6 +480,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (mobileContactBtn) {
                             mobileContactBtn.classList.remove('active');
                         }
+                    }
+                    
+                    // If clicking on e-commerce link from index page
+                    if (href === '#ecommerce' && window.location.pathname.includes('index.html')) {
+                        // Redirect to products page with e-commerce hash
+                        window.location.href = 'products.html#ecommerce';
+                        return;
                     }
                     
                     // Scroll to target
@@ -450,26 +532,121 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // ===== WHATSAPP FUNCTIONALITY =====
+    // ===== WHATSAPP FUNCTIONALITY - WITH E-COMMERCE OPTION =====
     const whatsappButtons = document.querySelectorAll('.btn-whatsapp, a[href*="wa.me"], a[href*="whatsapp"]');
     whatsappButtons.forEach(button => {
         button.addEventListener('click', function(e) {
+            // Check if this is an e-commerce specific button
+            const isEcommerceBtn = this.classList.contains('btn-ecommerce') || 
+                                  this.textContent.includes('E-commerce') || 
+                                  this.closest('.product-section#ecommerce');
+            
             // Allow default behavior for WhatsApp links
             if (this.href.includes('wa.me') || this.href.includes('whatsapp')) {
                 return true;
             }
             
             e.preventDefault();
-            const message = encodeURIComponent("Hello! I'm interested in SmartTrail Axora services. Can you help me?");
-            window.open(`https://wa.me/254113547613?text=${message}`, '_blank');
+            
+            // Custom message based on button context
+            let message = "Hello! I'm interested in SmartTrail Axora services. Can you help me?";
+            
+            if (isEcommerceBtn) {
+                message = "Hello! I'm interested in your E-commerce Solutions for my business. Can you tell me more about Ecovera?";
+            } else if (this.classList.contains('btn-inquiry')) {
+                message = "Hello! I have a question about SmartTrail Axora. Can you assist me?";
+            }
+            
+            const encodedMessage = encodeURIComponent(message);
+            window.open(`https://wa.me/254113547613?text=${encodedMessage}`, '_blank');
         });
     });
     
-    // ===== ADD CURRENT YEAR TO FOOTER =====
-    const yearSpan = document.querySelector('#current-year');
-    if (yearSpan) {
-        yearSpan.textContent = new Date().getFullYear();
+    // ===== ADD CURRENT YEAR TO FOOTER (Alternative method) =====
+    function updateFooterCopyright() {
+        const currentYear = new Date().getFullYear();
+        const footerBottom = document.querySelector('.footer-bottom p');
+        
+        if (footerBottom) {
+            // Check if it already has the year pattern
+            const text = footerBottom.textContent;
+            if (text.includes('202')) {
+                // Replace any 4-digit year starting with 20
+                footerBottom.textContent = text.replace(/\b20\d{2}\b/, currentYear);
+            } else {
+                // Add the year if not present
+                footerBottom.textContent = `© ${currentYear} SmartTrail Axora. All rights reserved.`;
+            }
+        }
     }
+    
+    // Run footer copyright update
+    updateFooterCopyright();
+    
+    // ===== E-COMMERCE SPECIFIC FUNCTIONALITY =====
+    function initEcommerceFeatures() {
+        // Add active state to e-commerce links in navigation
+        const ecommerceLinks = document.querySelectorAll('a[href*="ecommerce"], a[href*="Ecovera"]');
+        ecommerceLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                // Add visual feedback
+                this.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 200);
+                
+                // Track e-commerce click
+                console.log('E-commerce link clicked:', this.href);
+            });
+        });
+        
+        // Handle e-commerce demo requests
+        const ecommerceDemoBtns = document.querySelectorAll('.btn-ecommerce-demo, .product-section#ecommerce .btn-accent');
+        ecommerceDemoBtns.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (this.href && !this.href.includes('#') && !this.href.includes('javascript')) {
+                    return true; // Allow normal link behavior
+                }
+                
+                e.preventDefault();
+                console.log('E-commerce demo requested');
+                
+                // Show a custom message or redirect to contact form
+                const contactUrl = 'contact.html?interest=ecommerce';
+                window.location.href = contactUrl;
+            });
+        });
+        
+        // Preload e-commerce images for better performance
+        if (document.querySelector('.feature-card-ecommerce')) {
+            const ecommerceImg = new Image();
+            ecommerceImg.src = 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80';
+        }
+    }
+    
+    // Initialize e-commerce features
+    initEcommerceFeatures();
+    
+    // ===== LAZY LOAD IMAGES FOR BETTER PERFORMANCE =====
+    function lazyLoadImages() {
+        const images = document.querySelectorAll('img[data-src]');
+        
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.getAttribute('data-src');
+                    img.removeAttribute('data-src');
+                    observer.unobserve(img);
+                }
+            });
+        });
+        
+        images.forEach(img => imageObserver.observe(img));
+    }
+    
+    // Initialize lazy loading
+    lazyLoadImages();
 });
 
 // Add no-scroll class to body when mobile menu is open
@@ -477,6 +654,33 @@ const style = document.createElement('style');
 style.textContent = `
     body.no-scroll {
         overflow: hidden;
+    }
+    
+    /* Add smooth transition for product tabs */
+    .product-section {
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    
+    /* E-commerce specific animation */
+    @keyframes ecommercePulse {
+        0% { box-shadow: 0 0 0 0 rgba(128, 90, 213, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(128, 90, 213, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(128, 90, 213, 0); }
+    }
+    
+    .feature-card-ecommerce:hover {
+        animation: ecommercePulse 2s infinite;
+    }
+    
+    /* Smooth scrolling for anchor links */
+    html {
+        scroll-behavior: smooth;
+    }
+    
+    @media (prefers-reduced-motion: reduce) {
+        html {
+            scroll-behavior: auto;
+        }
     }
 `;
 document.head.appendChild(style);
